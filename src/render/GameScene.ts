@@ -57,6 +57,7 @@ export class GameScene extends Phaser.Scene {
   // Camera
   private cameraSpeed = 400;
   private zoomLevel = 1;
+  private spawnPulse = 0;
 
   // Viewport culling
   private visibleTiles: Set<string> = new Set();
@@ -148,7 +149,9 @@ export class GameScene extends Phaser.Scene {
     this.input.mouse?.disableContextMenu();
   }
 
-  update(_time: number, delta: number): void {
+  update(time: number, delta: number): void {
+    this.spawnPulse = time;
+
     // Simulation
     stepSimLoop(this.state, delta);
 
@@ -424,11 +427,12 @@ export class GameScene extends Phaser.Scene {
     for (let x = startX; x <= endX; x++) {
       for (let y = startY; y <= endY; y++) {
         const tile = this.state.tiles.get(tileKey(x, y));
-        if (tile?.revealed) revealedInView++;
+        if (tile && tile.revealed) {
+          revealedInView += 1;
+        }
       }
     }
 
-    // If the whole screen is fog/black, aggressively rebuild a playable bubble.
     if (revealedInView < 30) {
       const px = Math.floor(this.state.playerX);
       const py = Math.floor(this.state.playerY);
@@ -502,7 +506,9 @@ export class GameScene extends Phaser.Scene {
     if (entity.type === 'conveyor' || entity.type === 'splitter' || entity.type === 'merger') {
       const cx = x + w / 2;
       const cy = y + h / 2;
-      const [dx, dy] = DIRECTION_OFFSETS[entity.direction];
+      const dirOffset = DIRECTION_OFFSETS[entity.direction] ?? [0, 0];
+      const dx = dirOffset[0];
+      const dy = dirOffset[1];
       this.entityGraphics.lineStyle(2, 0xcccccc, 0.6);
       this.entityGraphics.lineBetween(cx - dx * 6, cy - dy * 6, cx + dx * 8, cy + dy * 8);
     }
