@@ -57,7 +57,6 @@ export class GameScene extends Phaser.Scene {
   // Camera
   private cameraSpeed = 400;
   private zoomLevel = 1;
-  private spawnPulse = 0;
 
   // Viewport culling
   private visibleTiles: Set<string> = new Set();
@@ -149,9 +148,7 @@ export class GameScene extends Phaser.Scene {
     this.input.mouse?.disableContextMenu();
   }
 
-  update(time: number, delta: number): void {
-    this.spawnPulse = time;
-
+  update(_time: number, delta: number): void {
     // Simulation
     stepSimLoop(this.state, delta);
 
@@ -414,6 +411,26 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.forceRevealPlayablePocket(px, py, 11, true);
+
+    let revealedCount = 0;
+    const revealRadius = 10;
+    for (let dx = -revealRadius; dx <= revealRadius; dx++) {
+      for (let dy = -revealRadius; dy <= revealRadius; dy++) {
+        const tile = this.state.tiles.get(tileKey(px + dx, py + dy));
+        if (!tile) continue;
+        if (tile.revealed) revealedCount++;
+      }
+    }
+
+    if (revealedCount < 40) {
+      for (let dx = -revealRadius; dx <= revealRadius; dx++) {
+        for (let dy = -revealRadius; dy <= revealRadius; dy++) {
+          if (dx * dx + dy * dy > revealRadius * revealRadius) continue;
+          const tile = this.state.tiles.get(tileKey(px + dx, py + dy));
+          if (tile) tile.revealed = true;
+        }
+      }
+    }
   }
 
   private ensureVisibleViewport(): void {
@@ -506,9 +523,7 @@ export class GameScene extends Phaser.Scene {
     if (entity.type === 'conveyor' || entity.type === 'splitter' || entity.type === 'merger') {
       const cx = x + w / 2;
       const cy = y + h / 2;
-      const dirOffset = DIRECTION_OFFSETS[entity.direction] ?? [0, 0];
-      const dx = dirOffset[0];
-      const dy = dirOffset[1];
+      const [dx, dy] = DIRECTION_OFFSETS[entity.direction];
       this.entityGraphics.lineStyle(2, 0xcccccc, 0.6);
       this.entityGraphics.lineBetween(cx - dx * 6, cy - dy * 6, cx + dx * 8, cy + dy * 8);
     }
