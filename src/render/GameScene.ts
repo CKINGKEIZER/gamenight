@@ -11,10 +11,10 @@ import { saveManager } from '../persistence/SaveManager';
 
 // Tile colors
 const TILE_COLORS: Record<string, number> = {
-  empty: 0x1d2542,
-  rock: 0x4c4f69,
-  surface: 0x5f7a4c,
-  bedrock: 0x1b1f2f,
+  empty: 0x1a1a2e,
+  rock: 0x444455,
+  surface: 0x556644,
+  bedrock: 0x222222,
   iron_vein: 0x8B4513,
   copper_vein: 0xB87333,
   gold_vein: 0xDAA520,
@@ -57,7 +57,6 @@ export class GameScene extends Phaser.Scene {
   // Camera
   private cameraSpeed = 400;
   private zoomLevel = 1;
-  private spawnPulse = 0;
   private bootSafetyTicks = 0;
 
   // Viewport culling
@@ -151,7 +150,6 @@ export class GameScene extends Phaser.Scene {
   }
 
   update(time: number, delta: number): void {
-    this.spawnPulse = time;
     // Simulation
     stepSimLoop(this.state, delta);
 
@@ -273,12 +271,8 @@ export class GameScene extends Phaser.Scene {
         if (!tile) continue;
 
         if (!tile.revealed) {
-          const fogShade = Phaser.Math.Clamp(0.14 + y / (WORLD_HEIGHT * 6), 0.14, 0.3);
-          this.tileGraphics.fillStyle(0x0c1020, fogShade);
+          this.tileGraphics.fillStyle(0x050510, 1);
           this.tileGraphics.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-
-          this.tileGraphics.lineStyle(1, 0x141b30, 0.1);
-          this.tileGraphics.strokeRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
           continue;
         }
 
@@ -306,15 +300,7 @@ export class GameScene extends Phaser.Scene {
           color = Phaser.Display.Color.GetColor(c.r, c.g, c.b);
         }
 
-        const depthShade = Phaser.Math.Clamp(1 - y / (WORLD_HEIGHT * 1.9), 0.45, 1);
-        const baseColor = Phaser.Display.Color.IntegerToColor(color);
-        const shadedColor = Phaser.Display.Color.GetColor(
-          Math.floor(baseColor.red * depthShade),
-          Math.floor(baseColor.green * depthShade),
-          Math.floor(baseColor.blue * depthShade + (1 - depthShade) * 20)
-        );
-
-        this.tileGraphics.fillStyle(shadedColor, 1);
+        this.tileGraphics.fillStyle(color, 1);
         this.tileGraphics.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
 
         // Grid lines (subtle)
@@ -363,21 +349,10 @@ export class GameScene extends Phaser.Scene {
     // Render player
     const px = this.state.playerX * TILE_SIZE + TILE_SIZE / 2;
     const py = this.state.playerY * TILE_SIZE + TILE_SIZE / 2;
-    const pulseScale = 1 + Math.sin(this.spawnPulse / 350) * 0.12;
-    this.playerGraphics.fillStyle(0x00ff88, 0.18);
-    this.playerGraphics.fillCircle(px, py, TILE_SIZE * 0.75 * pulseScale);
-    this.playerGraphics.lineStyle(2, 0x4dffd0, 0.85);
-    this.playerGraphics.strokeCircle(px, py, TILE_SIZE * 0.52);
-    this.playerGraphics.fillStyle(0x00ff88, 0.95);
-    this.playerGraphics.fillCircle(px, py, TILE_SIZE * 0.33);
-    this.playerGraphics.fillStyle(0x001a12, 0.9);
-    this.playerGraphics.fillRect(px - 4, py - 3, 8, 5);
-
-    // Starter beacon to orient new players.
-    if (this.state.tick < 1200) {
-      this.playerGraphics.lineStyle(1.5, 0x87ceff, 0.6);
-      this.playerGraphics.strokeCircle(px, py, TILE_SIZE * (1.2 + Math.sin(this.spawnPulse / 500) * 0.1));
-    }
+    this.playerGraphics.fillStyle(0x00ff88, 1);
+    this.playerGraphics.fillCircle(px, py, TILE_SIZE * 0.4);
+    this.playerGraphics.lineStyle(2, 0xffffff, 0.8);
+    this.playerGraphics.strokeCircle(px, py, TILE_SIZE * 0.4);
 
     // Build ghost
     if (this.buildMode) {
