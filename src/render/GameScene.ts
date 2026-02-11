@@ -58,6 +58,7 @@ export class GameScene extends Phaser.Scene {
   private cameraSpeed = 400;
   private zoomLevel = 1;
   private bootSafetyTicks = 0;
+  private spawnPulse = 0;
 
   // Viewport culling
   private visibleTiles: Set<string> = new Set();
@@ -150,6 +151,8 @@ export class GameScene extends Phaser.Scene {
   }
 
   update(time: number, delta: number): void {
+    this.spawnPulse = time;
+
     // Simulation
     stepSimLoop(this.state, delta);
 
