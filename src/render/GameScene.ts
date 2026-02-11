@@ -149,7 +149,7 @@ export class GameScene extends Phaser.Scene {
     this.input.mouse?.disableContextMenu();
   }
 
-  update(time: number, delta: number): void {
+update(time: number, delta: number): void {
     this.spawnPulse = time;
     // Simulation
     stepSimLoop(this.state, delta);
@@ -165,6 +165,7 @@ export class GameScene extends Phaser.Scene {
 
     // Reveal tiles near player
     this.revealNearPlayer();
+    this.ensureVisibleViewport();
 
     // Render
     this.renderWorld();
@@ -420,8 +421,8 @@ export class GameScene extends Phaser.Scene {
     this.state.playerX = Phaser.Math.Clamp(this.state.playerX, 0, WORLD_WIDTH - 1);
     this.state.playerY = Phaser.Math.Clamp(this.state.playerY, 0, WORLD_HEIGHT - 1);
 
-    const px = Math.floor(this.state.playerX);
-    const py = Math.floor(this.state.playerY);
+let px = Math.floor(this.state.playerX);
+    let py = Math.floor(this.state.playerY);
 
     const playerTile = this.state.tiles.get(tileKey(px, py));
     if (!playerTile || this.state.tiles.size === 0) {
@@ -430,8 +431,11 @@ export class GameScene extends Phaser.Scene {
       this.state.tiles = fallback.tiles;
       this.state.playerX = fallback.playerX;
       this.state.playerY = fallback.playerY;
+px = Math.floor(this.state.playerX);
+      py = Math.floor(this.state.playerY);
     }
 
+    this.forceRevealPlayablePocket(px, py, 11, true);
     let revealedCount = 0;
     const revealRadius = 10;
     for (let dx = -revealRadius; dx <= revealRadius; dx++) {
@@ -453,6 +457,64 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+private ensureVisibleViewport(): void {
+    const cam = this.cameras.main;
+    const startX = Math.max(0, Math.floor(cam.scrollX / TILE_SIZE));
+    const startY = Math.max(0, Math.floor(cam.scrollY / TILE_SIZE));
+    const endX = Math.min(WORLD_WIDTH - 1, Math.ceil((cam.scrollX + cam.width / cam.zoom) / TILE_SIZE));
+    const endY = Math.min(WORLD_HEIGHT - 1, Math.ceil((cam.scrollY + cam.height / cam.zoom) / TILE_SIZE));
+
+    let revealedInView = 0;
+    for (let x = startX; x <= endX; x++) {
+      for (let y = startY; y <= endY; y++) {
+        const tile = this.state.tiles.get(tileKey(x, y));
+        if (tile && tile.revealed) {
+          revealedInView += 1;
+        }
+      }
+    }
+
+    if (revealedInView < 30) {
+      const px = Math.floor(this.state.playerX);
+      const py = Math.floor(this.state.playerY);
+      this.forceRevealPlayablePocket(px, py, 13, true);
+      this.cameras.main.centerOn(
+        this.state.playerX * TILE_SIZE + TILE_SIZE / 2,
+        this.state.playerY * TILE_SIZE + TILE_SIZE / 2
+      );
+    }
+  }
+
+  private forceRevealPlayablePocket(centerX: number, centerY: number, radius: number, carveFloor = false): void {
+    for (let dx = -radius; dx <= radius; dx++) {
+      for (let dy = -radius; dy <= radius; dy++) {
+        if (dx * dx + dy * dy > radius * radius) continue;
+        const x = centerX + dx;
+        const y = centerY + dy;
+        const tile = this.state.tiles.get(tileKey(x, y));
+        if (!tile) continue;
+        tile.revealed = true;
+
+        if (carveFloor && dy >= -2 && dy <= 2 && Math.abs(dx) <= radius - 2) {
+          if (tile.type === 'rock' || tile.type === 'bedrock') {
+            tile.type = 'empty';
+            tile.resourceAmount = 0;
+            tile.gasLevel = 0;
+            tile.waterLevel = 0;
+          }
+        }
+      }
+    }
+
+    const playerTile = this.state.tiles.get(tileKey(centerX, centerY));
+    if (playerTile) {
+      playerTile.revealed = true;
+      playerTile.type = playerTile.type === 'bedrock' ? 'surface' : 'empty';
+      playerTile.entityId = null;
+      playerTile.gasLevel = 0;
+      playerTile.waterLevel = 0;
+    }
+  }
   private renderEntity(entity: Entity): void {
     const def = BUILDINGS[entity.type];
     const x = entity.x * TILE_SIZE;
