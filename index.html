@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deep Shaft Syndicate</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #0a0a0f; color: #e0e0e0; font-family: 'Courier New', monospace; }
+    #game-container { width: 100vw; height: 100vh; position: relative; }
+    #game-container canvas { display: block; }
+
+    /* UI Overlay Layer */
+    #ui-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+    #ui-overlay > * { pointer-events: auto; }
+
+    /* Top bar */
+    #top-bar { position: absolute; top: 0; left: 0; right: 0; height: 40px; background: rgba(10,10,20,0.9); border-bottom: 1px solid #333; display: flex; align-items: center; padding: 0 12px; gap: 16px; font-size: 13px; z-index: 20; }
+    .resource-display { display: flex; align-items: center; gap: 4px; color: #adf; }
+    .resource-display .label { color: #888; }
+    .resource-display .value { color: #fff; font-weight: bold; }
+
+    /* Speed controls */
+    #speed-controls { display: flex; gap: 4px; margin-left: auto; }
+    #speed-controls button { background: #1a1a2e; border: 1px solid #444; color: #ccc; padding: 2px 8px; cursor: pointer; font-family: inherit; font-size: 12px; }
+    #speed-controls button.active { background: #2a4a6e; border-color: #6af; color: #fff; }
+    #speed-controls button:hover { background: #2a2a4e; }
+
+    /* Auth button */
+    #auth-btn { background: #1a1a2e; border: 1px solid #444; color: #aaa; padding: 2px 10px; cursor: pointer; font-family: inherit; font-size: 12px; margin-left: 8px; }
+    #auth-btn:hover { background: #2a2a4e; color: #fff; }
+
+    /* Side panel */
+    #side-panel { position: absolute; right: 0; top: 40px; width: 280px; bottom: 0; background: rgba(10,10,20,0.92); border-left: 1px solid #333; overflow-y: auto; display: none; z-index: 15; padding: 8px; font-size: 12px; }
+    #side-panel.open { display: block; }
+    #side-panel h3 { color: #adf; margin: 8px 0 4px; font-size: 13px; }
+
+    /* Bottom bar - build tools */
+    #bottom-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: rgba(10,10,20,0.92); border-top: 1px solid #333; display: flex; align-items: center; padding: 0 8px; gap: 4px; z-index: 15; overflow-x: auto; }
+    .build-btn { width: 48px; height: 48px; background: #1a1a2e; border: 1px solid #444; color: #ccc; cursor: pointer; font-family: inherit; font-size: 9px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; flex-shrink: 0; }
+    .build-btn:hover { background: #2a2a4e; border-color: #6af; }
+    .build-btn.active { background: #2a4a6e; border-color: #6af; color: #fff; }
+    .build-btn .icon { font-size: 18px; }
+
+    /* Tooltip */
+    #tooltip { position: absolute; background: rgba(5,5,15,0.95); border: 1px solid #555; padding: 8px; font-size: 11px; max-width: 250px; display: none; z-index: 100; pointer-events: none; line-height: 1.4; }
+    #tooltip .tt-title { color: #adf; font-weight: bold; margin-bottom: 4px; }
+    #tooltip .tt-stat { color: #8cf; }
+    #tooltip .tt-warn { color: #fa5; }
+
+    /* Alert list */
+    #alert-list { position: absolute; top: 48px; right: 8px; width: 260px; z-index: 20; }
+    .alert-item { background: rgba(30,10,10,0.92); border: 1px solid #a33; padding: 6px 8px; margin-bottom: 4px; font-size: 11px; cursor: pointer; display: flex; justify-content: space-between; }
+    .alert-item.warning { border-color: #a83; background: rgba(30,20,5,0.92); }
+    .alert-item.info { border-color: #38a; background: rgba(5,10,30,0.92); }
+    .alert-item:hover { opacity: 0.8; }
+    .alert-dismiss { color: #888; cursor: pointer; margin-left: 8px; }
+
+    /* Modal */
+    .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; display: flex; align-items: center; justify-content: center; }
+    .modal { background: #12121f; border: 1px solid #444; padding: 24px; min-width: 340px; max-width: 500px; max-height: 80vh; overflow-y: auto; }
+    .modal h2 { color: #adf; margin-bottom: 16px; font-size: 18px; }
+    .modal input { width: 100%; padding: 8px; background: #1a1a2e; border: 1px solid #444; color: #fff; font-family: inherit; margin-bottom: 8px; }
+    .modal button { padding: 8px 16px; background: #2a4a6e; border: 1px solid #6af; color: #fff; cursor: pointer; font-family: inherit; margin-right: 8px; margin-bottom: 4px; }
+    .modal button:hover { background: #3a5a8e; }
+    .modal button.secondary { background: #1a1a2e; border-color: #555; }
+    .modal button.danger { background: #4a1a1a; border-color: #a33; }
+    .modal .divider { border-top: 1px solid #333; margin: 12px 0; }
+    .modal label { display: block; color: #aaa; margin-bottom: 4px; font-size: 12px; }
+    .modal .error { color: #f55; font-size: 12px; margin-bottom: 8px; }
+    .modal .success { color: #5f5; font-size: 12px; margin-bottom: 8px; }
+
+    /* Overlay mode selector */
+    #overlay-modes { display: flex; gap: 4px; }
+    #overlay-modes button { background: #1a1a2e; border: 1px solid #444; color: #999; padding: 2px 8px; cursor: pointer; font-size: 11px; font-family: inherit; }
+    #overlay-modes button.active { background: #2a4a6e; color: #fff; border-color: #6af; }
+
+    /* Research panel */
+    .research-node { background: #1a1a2e; border: 1px solid #444; padding: 6px 8px; margin: 4px 0; cursor: pointer; font-size: 11px; }
+    .research-node:hover { border-color: #6af; }
+    .research-node.unlocked { border-color: #4a4; background: #1a2a1a; }
+    .research-node.researching { border-color: #aa4; background: #2a2a1a; }
+    .research-node.locked { opacity: 0.5; cursor: default; }
+    .research-node .rn-name { color: #adf; font-weight: bold; }
+    .research-node .rn-cost { color: #888; font-size: 10px; }
+    .research-node .rn-progress { height: 3px; background: #333; margin-top: 4px; }
+    .research-node .rn-progress-bar { height: 100%; background: #6af; }
+
+    /* Contract list */
+    .contract-item { background: #1a1a2e; border: 1px solid #444; padding: 6px 8px; margin: 4px 0; font-size: 11px; }
+    .contract-item.active { border-color: #4a4; }
+    .contract-item.expired { border-color: #a33; opacity: 0.6; }
+    .contract-item .ci-title { color: #adf; font-weight: bold; }
+    .contract-item .ci-reward { color: #4a4; }
+    .contract-item .ci-deadline { color: #a83; }
+
+    /* Save slot */
+    .save-slot { background: #1a1a2e; border: 1px solid #444; padding: 8px; margin: 4px 0; cursor: pointer; font-size: 11px; }
+    .save-slot:hover { border-color: #6af; }
+    .save-slot .ss-name { color: #adf; font-weight: bold; }
+    .save-slot .ss-time { color: #888; }
+
+    /* Tutorial overlay */
+    #tutorial-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; display: none; }
+    #tutorial-overlay.active { display: flex; align-items: center; justify-content: center; }
+    #tutorial-box { background: rgba(10,10,25,0.95); border: 2px solid #6af; padding: 20px 24px; max-width: 420px; text-align: center; }
+    #tutorial-box h3 { color: #6af; margin-bottom: 8px; }
+    #tutorial-box p { color: #ccc; font-size: 13px; line-height: 1.5; margin-bottom: 12px; }
+    #tutorial-box button { padding: 8px 20px; background: #2a4a6e; border: 1px solid #6af; color: #fff; cursor: pointer; font-family: inherit; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #111; }
+    ::-webkit-scrollbar-thumb { background: #444; }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <div id="ui-overlay">
+      <div id="top-bar">
+        <div class="resource-display"><span class="label">$</span><span class="value" id="money-display">0</span></div>
+        <div class="resource-display"><span class="label">Power:</span><span class="value" id="power-display">0/0 kW</span></div>
+        <div class="resource-display"><span class="label">Rep:</span><span class="value" id="rep-display">0</span></div>
+        <div class="resource-display"><span class="label">Day:</span><span class="value" id="day-display">1</span></div>
+        <div id="overlay-modes">
+          <button data-mode="none" class="active">Normal</button>
+          <button data-mode="power">Power</button>
+          <button data-mode="heat">Heat</button>
+          <button data-mode="throughput">Flow</button>
+          <button data-mode="stability">Stability</button>
+        </div>
+        <div id="speed-controls">
+          <button data-speed="0">⏸</button>
+          <button data-speed="1" class="active">1x</button>
+          <button data-speed="2">2x</button>
+          <button data-speed="5">5x</button>
+        </div>
+        <button id="auth-btn">Guest</button>
+      </div>
+      <div id="side-panel"></div>
+      <div id="bottom-bar"></div>
+      <div id="tooltip"></div>
+      <div id="alert-list"></div>
+      <div id="tutorial-overlay"><div id="tutorial-box"></div></div>
+    </div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
