@@ -57,8 +57,6 @@ export class GameScene extends Phaser.Scene {
   // Camera
   private cameraSpeed = 400;
   private zoomLevel = 1;
-  private bootSafetyTicks = 0;
-  private spawnPulse = 0;
 
   // Viewport culling
   private visibleTiles: Set<string> = new Set();
@@ -150,9 +148,7 @@ export class GameScene extends Phaser.Scene {
     this.input.mouse?.disableContextMenu();
   }
 
-  update(time: number, delta: number): void {
-    this.spawnPulse = time;
-
+  update(_time: number, delta: number): void {
     // Simulation
     stepSimLoop(this.state, delta);
 
@@ -441,14 +437,6 @@ export class GameScene extends Phaser.Scene {
         this.state.playerX * TILE_SIZE + TILE_SIZE / 2,
         this.state.playerY * TILE_SIZE + TILE_SIZE / 2
       );
-    }
-
-    // During first few seconds keep the spawn area safe and visible.
-    if (this.bootSafetyTicks < 120) {
-      this.bootSafetyTicks++;
-      const px = Math.floor(this.state.playerX);
-      const py = Math.floor(this.state.playerY);
-      this.forceRevealPlayablePocket(px, py, 9, true);
     }
   }
 

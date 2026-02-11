@@ -21,7 +21,6 @@ export class UIManager {
   private powerDisplay: HTMLElement;
   private repDisplay: HTMLElement;
   private dayDisplay: HTMLElement;
-  private statusHint: HTMLElement;
   private bottomBar: HTMLElement;
   private sidePanel: HTMLElement;
   private tooltip: HTMLElement;
@@ -41,7 +40,6 @@ export class UIManager {
     this.powerDisplay = document.getElementById('power-display')!;
     this.repDisplay = document.getElementById('rep-display')!;
     this.dayDisplay = document.getElementById('day-display')!;
-    this.statusHint = document.getElementById('status-hint')!;
     this.bottomBar = document.getElementById('bottom-bar')!;
     this.sidePanel = document.getElementById('side-panel')!;
     this.tooltip = document.getElementById('tooltip')!;
@@ -226,7 +224,6 @@ export class UIManager {
     this.scene.onStateUpdate = (state) => {
       this.state = state;
       this.updateTopBar();
-      this.updateStatusHint();
       this.updateAlerts();
     };
 
@@ -251,31 +248,6 @@ export class UIManager {
         this.openEntityPanel(entity, entityId);
       }
     };
-  }
-
-
-  private updateStatusHint(): void {
-    if (!this.state) return;
-
-    const buildingCount = this.state.entities.size;
-    if (buildingCount === 0) {
-      this.statusHint.textContent = 'Start by moving with WASD/Arrows, then press Dig (⛏) to clear adjacent rock.';
-      return;
-    }
-
-    const hasPower = Array.from(this.state.entities.values()).some(e => e.type === 'coal_generator' || e.type === 'gas_generator' || e.type === 'nuclear_reactor');
-    if (!hasPower) {
-      this.statusHint.textContent = 'Tip: place a Coal Generator ⚡ and some Power Lines so your machines can run.';
-      return;
-    }
-
-    const hasMining = Array.from(this.state.entities.values()).some(e => e.type === 'mining_rig' || e.type === 'advanced_drill');
-    if (!hasMining) {
-      this.statusHint.textContent = 'Next goal: place a Mining Rig ⛏ near ore and route output with Conveyors.';
-      return;
-    }
-
-    this.statusHint.textContent = 'Factory running: check Research, Contracts, and overlays to optimize output.';
   }
 
   private updateTopBar(): void {
@@ -772,9 +744,9 @@ export class UIManager {
 
   private showTutorial(): void {
     const steps = [
-      { title: 'Welcome to Deep Shaft Syndicate!', text: 'You start as the operator (green marker). Move first, clear a little space, then begin building your first line.' },
-      { title: 'Movement & Digging', text: 'Use WASD or Arrow Keys to move. The Dig button mines nearby rock tiles so you can expand your build area.' },
-      { title: 'Building Basics', text: 'Use bottom categories, select a building, then left-click to place. Press R to rotate and right-click or ESC to cancel.' },
+      { title: 'Welcome to Deep Shaft Syndicate!', text: 'You\'re a mining magnate building an underground empire. Mine ores, process them, sell for profit, and expand your operation.' },
+      { title: 'Movement', text: 'Use WASD or Arrow Keys to move your character (green circle). You can dig adjacent rock tiles with the Dig button.' },
+      { title: 'Building', text: 'Click category buttons at the bottom to select buildings. Click on the map to place them. Press R to rotate. Right-click to cancel.' },
       { title: 'Power', text: 'Most buildings need power. Place a Coal Generator and connect buildings with Power Lines. Keep coal flowing!' },
       { title: 'Mining & Selling', text: 'Place Mining Rigs near ore veins. Connect with Conveyors to a Selling Terminal. Watch the money flow!' },
       { title: 'Heat & Stability', text: 'Smelters generate heat — place Cooling Towers nearby. Mining reduces cave stability — use Support Pillars to prevent cave-ins.' },

@@ -6,7 +6,7 @@
   <title>Deep Shaft Syndicate</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; overflow: hidden; background: radial-gradient(circle at top, #151b35 0%, #080a14 55%, #05060d 100%); color: #e0e0e0; font-family: 'Courier New', monospace; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #0a0a0f; color: #e0e0e0; font-family: 'Courier New', monospace; }
     #game-container { width: 100vw; height: 100vh; position: relative; }
     #game-container canvas { display: block; }
 
@@ -15,29 +15,29 @@
     #ui-overlay > * { pointer-events: auto; }
 
     /* Top bar */
-    #top-bar { position: absolute; top: 0; left: 0; right: 0; min-height: 44px; background: linear-gradient(180deg, rgba(18,24,48,0.95), rgba(8,11,25,0.92)); border-bottom: 1px solid #2f3d68; box-shadow: 0 8px 22px rgba(0,0,0,0.45); display: flex; align-items: center; padding: 6px 12px; gap: 12px; font-size: 13px; z-index: 20; flex-wrap: wrap; }
-    .resource-display { display: flex; align-items: center; gap: 4px; color: #adf; background: rgba(21,31,61,0.7); border: 1px solid #2d3d6a; border-radius: 6px; padding: 3px 7px; }
+    #top-bar { position: absolute; top: 0; left: 0; right: 0; height: 40px; background: rgba(10,10,20,0.9); border-bottom: 1px solid #333; display: flex; align-items: center; padding: 0 12px; gap: 16px; font-size: 13px; z-index: 20; }
+    .resource-display { display: flex; align-items: center; gap: 4px; color: #adf; }
     .resource-display .label { color: #888; }
     .resource-display .value { color: #fff; font-weight: bold; }
 
     /* Speed controls */
     #speed-controls { display: flex; gap: 4px; margin-left: auto; }
-    #speed-controls button { background: #161d3b; border: 1px solid #3f5389; color: #ccc; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 12px; }
+    #speed-controls button { background: #1a1a2e; border: 1px solid #444; color: #ccc; padding: 2px 8px; cursor: pointer; font-family: inherit; font-size: 12px; }
     #speed-controls button.active { background: #2a4a6e; border-color: #6af; color: #fff; }
     #speed-controls button:hover { background: #2a2a4e; }
 
     /* Auth button */
-    #auth-btn { background: #161d3b; border: 1px solid #3f5389; color: #c7d7ff; padding: 3px 10px; border-radius: 5px; cursor: pointer; font-family: inherit; font-size: 12px; margin-left: 8px; }
+    #auth-btn { background: #1a1a2e; border: 1px solid #444; color: #aaa; padding: 2px 10px; cursor: pointer; font-family: inherit; font-size: 12px; margin-left: 8px; }
     #auth-btn:hover { background: #2a2a4e; color: #fff; }
 
     /* Side panel */
-    #side-panel { position: absolute; right: 0; top: 44px; width: 300px; bottom: 0; background: linear-gradient(180deg, rgba(14,18,35,0.95), rgba(8,9,18,0.95)); border-left: 1px solid #2f3d68; box-shadow: -8px 0 18px rgba(0,0,0,0.35); overflow-y: auto; display: none; z-index: 15; padding: 10px; font-size: 12px; }
+    #side-panel { position: absolute; right: 0; top: 40px; width: 280px; bottom: 0; background: rgba(10,10,20,0.92); border-left: 1px solid #333; overflow-y: auto; display: none; z-index: 15; padding: 8px; font-size: 12px; }
     #side-panel.open { display: block; }
     #side-panel h3 { color: #adf; margin: 8px 0 4px; font-size: 13px; }
 
     /* Bottom bar - build tools */
-    #bottom-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 64px; background: linear-gradient(180deg, rgba(8,11,25,0.9), rgba(12,18,36,0.95)); border-top: 1px solid #2f3d68; box-shadow: 0 -6px 18px rgba(0,0,0,0.45); display: flex; align-items: center; padding: 0 8px; gap: 4px; z-index: 15; overflow-x: auto; }
-    .build-btn { width: 50px; height: 50px; background: linear-gradient(180deg, #1a2245, #111832); border: 1px solid #38518a; color: #d6e5ff; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 9px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; flex-shrink: 0; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03); }
+    #bottom-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: rgba(10,10,20,0.92); border-top: 1px solid #333; display: flex; align-items: center; padding: 0 8px; gap: 4px; z-index: 15; overflow-x: auto; }
+    .build-btn { width: 48px; height: 48px; background: #1a1a2e; border: 1px solid #444; color: #ccc; cursor: pointer; font-family: inherit; font-size: 9px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; flex-shrink: 0; }
     .build-btn:hover { background: #2a2a4e; border-color: #6af; }
     .build-btn.active { background: #2a4a6e; border-color: #6af; color: #fff; }
     .build-btn .icon { font-size: 18px; }
@@ -72,9 +72,7 @@
 
     /* Overlay mode selector */
     #overlay-modes { display: flex; gap: 4px; }
-
-    #status-hint { color: #9fc5ff; border: 1px solid #334d80; background: rgba(11,18,40,0.78); border-radius: 6px; padding: 3px 8px; font-size: 11px; min-width: 230px; }
-    #overlay-modes button { background: #161d3b; border: 1px solid #3f5389; color: #b8c2de; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-family: inherit; }
+    #overlay-modes button { background: #1a1a2e; border: 1px solid #444; color: #999; padding: 2px 8px; cursor: pointer; font-size: 11px; font-family: inherit; }
     #overlay-modes button.active { background: #2a4a6e; color: #fff; border-color: #6af; }
 
     /* Research panel */
@@ -124,7 +122,6 @@
         <div class="resource-display"><span class="label">Power:</span><span class="value" id="power-display">0/0 kW</span></div>
         <div class="resource-display"><span class="label">Rep:</span><span class="value" id="rep-display">0</span></div>
         <div class="resource-display"><span class="label">Day:</span><span class="value" id="day-display">1</span></div>
-        <div id="status-hint">Use WASD/Arrows to move • Mine nearby rock with Dig (⛏)</div>
         <div id="overlay-modes">
           <button data-mode="none" class="active">Normal</button>
           <button data-mode="power">Power</button>
